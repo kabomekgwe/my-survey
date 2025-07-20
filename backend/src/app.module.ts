@@ -18,6 +18,7 @@ import { TemplatesModule } from './templates/templates.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { FilesModule } from './files/files.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { HealthModule } from './health/health.module';
 
 // Configuration
 import { appConfig } from './config/app.config';
@@ -100,6 +101,7 @@ import { cacheConfig } from './config/cache.config';
     IntegrationsModule,
     FilesModule,
     NotificationsModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
