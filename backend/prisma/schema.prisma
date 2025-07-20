@@ -1,0 +1,368 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with role-based access control
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  password  String
+  role      UserRole @default(CREATOR)
+  avatar    String?
+  isActive  Boolean  @default(true)
+  
+  // Authentication
+  emailVerified    Boolean   @default(false)
+  emailVerifiedAt  DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  lastLoginAt      DateTime?
+  loginAttempts    Int       @default(0)
+  lockedUntil      DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  surveys           Survey[]
+  responses         Response[]
+  teamMemberships   TeamMember[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  CREATOR
+  VIEWER
+}
+
+// Team collaboration
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  members TeamMember[]
+  surveys Survey[]
+  
+  @@map("teams")
+}
+
+model TeamMember {
+  id     String     @id @default(cuid())
+  role   TeamRole   @default(MEMBER)
+  userId String
+  teamId String
+  
+  // Timestamps
+  joinedAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// Survey model with comprehensive settings
+model Survey {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      SurveyStatus @default(DRAFT)
+  
+  // Settings stored as JSON
+  settings    Json         @default("{}")
+  
+  // Metadata
+  slug        String?      @unique
+  tags        String[]     @default([])
+  
+  // Ownership
+  createdById String
+  teamId      String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+  closedAt    DateTime?
+  
+  // Relations
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  team        Team?        @relation(fields: [teamId], references: [id])
+  questions   Question[]
+  responses   Response[]
+  analytics   SurveyAnalytics?
+  
+  @@map("surveys")
+}
+
+enum SurveyStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+// Question model with flexible structure
+model Question {
+  id          String       @id @default(cuid())
+  type        QuestionType
+  title       String
+  description String?
+  required    Boolean      @default(false)
+  order       Int
+  
+  // Question configuration stored as JSON
+  config      Json         @default("{}")
+  
+  // Survey relation
+  surveyId    String
+  survey      Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // Relations
+  options     QuestionOption[]
+  logic       QuestionLogic[]
+  answers     Answer[]
+  
+  @@map("questions")
+}
+
+enum QuestionType {
+  SHORT_TEXT
+  LONG_TEXT
+  EMAIL
+  NUMBER
+  URL
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  DROPDOWN
+  RATING
+  NPS
+  LIKERT_SCALE
+  SLIDER
+  DATE
+  TIME
+  DATETIME
+  MATRIX
+  RANKING
+  FILE_UPLOAD
+  SIGNATURE
+  SECTION_BREAK
+  PAGE_BREAK
+}
+
+// Question options for choice-based questions
+model QuestionOption {
+  id         String   @id @default(cuid())
+  label      String
+  value      String
+  order      Int
+  isOther    Boolean  @default(false)
+  
+  // Question relation
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@map("question_options")
+}
+
+// Question logic for conditional branching
+model QuestionLogic {
+  id               String      @id @default(cuid())
+  condition        Json        // Condition configuration
+  action           LogicAction
+  targetQuestionId String?
+  value            Json?       // Action value
+  
+  // Question relation
+  questionId       String
+  question         Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  @@map("question_logic")
+}
+
+enum LogicAction {
+  SHOW_QUESTION
+  HIDE_QUESTION
+  JUMP_TO_QUESTION
+  END_SURVEY
+}
+
+// Response model for survey submissions
+model Response {
+  id           String    @id @default(cuid())
+  isComplete   Boolean   @default(false)
+  
+  // Respondent information
+  respondentId String?
+  ipAddress    String?
+  userAgent    String?
+  
+  // Metadata stored as JSON
+  metadata     Json      @default("{}")
+  
+  // Survey relation
+  surveyId     String
+  survey       Survey    @relation(fields: [surveyId], references: [id])
+  
+  // User relation (optional for anonymous responses)
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id])
+  
+  // Timestamps
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  updatedAt    DateTime  @updatedAt
+  
+  // Relations
+  answers      Answer[]
+  
+  @@map("responses")
+}
+
+// Answer model for individual question responses
+model Answer {
+  id         String   @id @default(cuid())
+  
+  // Answer value stored as JSON to handle different types
+  value      Json
+  
+  // Question and Response relations
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  responseId String
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@unique([questionId, responseId])
+  @@map("answers")
+}
+
+// File upload model
+model FileUpload {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  
+  // Metadata
+  metadata     Json     @default("{}")
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("file_uploads")
+}
+
+// Survey analytics model
+model SurveyAnalytics {
+  id               String   @id @default(cuid())
+  totalResponses   Int      @default(0)
+  completionRate   Float    @default(0)
+  averageTime      Int      @default(0) // in seconds
+  
+  // Analytics data stored as JSON
+  data             Json     @default("{}")
+  
+  // Survey relation
+  surveyId         String   @unique
+  survey           Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@map("survey_analytics")
+}
+
+// Notification model
+model Notification {
+  id        String             @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  data      Json               @default("{}")
+  read      Boolean            @default(false)
+  
+  // User relation
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime           @default(now())
+  readAt    DateTime?
+  
+  @@map("notifications")
+}
+
+enum NotificationType {
+  SURVEY_RESPONSE
+  SURVEY_PUBLISHED
+  TEAM_INVITATION
+  SYSTEM_UPDATE
+}
+
+// Audit log for tracking changes
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  oldValues Json?
+  newValues Json?
+  
+  // User relation
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  
+  @@map("audit_logs")
+}
