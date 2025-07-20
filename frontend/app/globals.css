@@ -1,0 +1,246 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS variables for consistent theming */
+:root {
+  --mantine-color-body: #ffffff;
+  --mantine-color-text: #212529;
+  --mantine-color-dimmed: #868e96;
+  --mantine-color-primary: #0ea5e9;
+  --mantine-color-error: #ef4444;
+  --mantine-color-success: #22c55e;
+  --mantine-color-warning: #f59e0b;
+  
+  /* Custom spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Custom shadows */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Custom border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* Dark mode variables */
+[data-mantine-color-scheme='dark'] {
+  --mantine-color-body: #1a1b23;
+  --mantine-color-text: #c1c2c5;
+  --mantine-color-dimmed: #909296;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+[data-mantine-color-scheme='dark'] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-mantine-color-scheme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+}
+
+/* Custom utilities */
+.text-gradient {
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-mantine-color-scheme='dark'] .glass-effect {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Loading states */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+[data-mantine-color-scheme='dark'] .loading-skeleton {
+  background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Survey specific styles */
+.survey-question {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.survey-question.active {
+  @apply transform scale-105;
+}
+
+.survey-progress {
+  @apply transition-all duration-500 ease-out;
+}
+
+/* Drag and drop styles */
+.dragging {
+  @apply opacity-50 transform rotate-2 scale-95;
+}
+
+.drop-zone {
+  @apply border-2 border-dashed border-brand-300 bg-brand-50 transition-colors duration-200;
+}
+
+.drop-zone.active {
+  @apply border-brand-500 bg-brand-100;
+}
+
+[data-mantine-color-scheme='dark'] .drop-zone {
+  @apply border-brand-600 bg-brand-900/20;
+}
+
+[data-mantine-color-scheme='dark'] .drop-zone.active {
+  @apply border-brand-400 bg-brand-800/30;
+}
+
+/* Chart styles */
+.recharts-tooltip-wrapper {
+  @apply rounded-lg shadow-lg;
+}
+
+.recharts-default-tooltip {
+  @apply bg-white border border-gray-200 rounded-lg shadow-lg;
+}
+
+[data-mantine-color-scheme='dark'] .recharts-default-tooltip {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break {
+    page-break-before: always;
+  }
+  
+  body {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-full {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .focus-ring {
+    @apply focus:ring-4 focus:ring-black;
+  }
+}
+
+/* Custom component styles */
+.survey-builder {
+  min-height: calc(100vh - 4rem);
+}
+
+.survey-renderer {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.analytics-dashboard {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
